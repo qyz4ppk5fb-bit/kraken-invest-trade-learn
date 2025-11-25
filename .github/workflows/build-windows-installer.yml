@@ -1,10 +1,7 @@
 name: Build Windows Installer (NSIS)
 
-# Run on manual dispatch and when a Release is published
 on:
   workflow_dispatch:
-  release:
-    types: [published]
   push:
     branches:
       - main
@@ -12,59 +9,19 @@ on:
 jobs:
   build-installer:
     runs-on: windows-latest
+
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Show files (debug)
-        run: dir /s
+      - name: Show working directory
+        run: Get-Location
 
-      - name: Find uploaded ZIP (if present)
-        # If you uploaded the package ZIP to repo root (KrakenDemo-Installer-Package.zip) this will extract it
-        run: |
-          if exist KrakenDemo-Installer-Package.zip (
-            powershell -c "Expand-Archive -Path KrakenDemo-Installer-Package.zip -DestinationPath extracted"
-          ) else (
-            echo "No package ZIP found in repo root; expecting installer/ folder and app/ folder to be committed directly."
-          )
+      - name: List files
+        run: Get-ChildItem -Recurse
 
-      - name: List extracted files (debug)
-        run: dir extracted /s || echo "no extracted folder"
+      - name: Install NSIS
+        run: choco install nsis -y
 
-      - name: Install NSIS (via Chocolatey)
-        run: |
-          choco install nsis -y
-          refreshenv
-          where makensis
-
-      - name: Build installer with makensis
-        working-directory: ${{ github.workspace }}
-        run: |
-          REM Prefer NSIS script in repo or inside extracted/installer
-          if exist installer\krakendemo_installer.nsi (
-            makensis installer\krakendemo_installer.nsi
-          ) else if exist extracted\installer\krakendemo_installer.nsi (
-            makensis extracted\installer\krakendemo_installer.nsi
-          ) else (
-            echo "ERROR: NSIS script not found at installer\\krakendemo_installer.nsi or extracted\\installer\\krakendemo_installer.nsi"
-            exit 1
-          )
-
-      - name: Show produced files
-        run: dir /s
-
-      - name: Upload EXE to Release (if triggered by release)
-        if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./KrakenDemo-Setup.exe
-          asset_name: KrakenDemo-Setup.exe
-          asset_content_type: application/octet-stream
-
-      - name: Upload EXE as workflow artifact (fallback)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: KrakenDemo-Setup.exe
-          path: KrakenDemo-Setup.exe
+      - name: Build installer
+        run: makensis.exe build_installer.nsi
