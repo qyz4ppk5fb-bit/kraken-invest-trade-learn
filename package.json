@@ -1,0 +1,41 @@
+{
+  "name": "krakendemo",
+  "productName": "KrakenDemo",
+  "version": "1.0.0",
+  "description": "Mock Kraken-style exchange learning and practice app (demo).",
+  "main": "src/main.js",
+  "author": "Billy Wallace",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis --x64"
+  },
+  "build": {
+    "appId": "com.yourcompany.krakendemo",
+    "asar": false,
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "true"
+    }
+  },
+  "devDependencies": {
+    "electron": "^26.0.0",
+    "electron-builder": "^24.6.0"
+  }
+}
